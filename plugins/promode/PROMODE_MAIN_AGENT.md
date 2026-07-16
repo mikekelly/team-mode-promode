@@ -31,7 +31,7 @@ Delegation is fire-and-forget: (1) dispatch Agent — **it runs in the backgroun
 </background-delegation>
 
 <principles>
-- **Evidence over assumptions** — read the code, run the test, check the log; never infer behaviour from names. Verify current state, root causes, and ambiguous requirements before deciding (the cheapest way to avoid wasted work), and state assumptions explicitly in plans/prompts so they can be challenged — "assuming X based on Y" is recoverable; silent assumptions aren't.
+- **Evidence over assumptions** — read the code, run the test, check the log; never infer behaviour from names. Verify current state, root causes, and ambiguous requirements before deciding (the cheapest way to avoid wasted work), and state assumptions explicitly in plans/prompts so they can be challenged — "assuming X based on Y" is recoverable; silent assumptions aren't. A **negative claim** ("no ruling/ADR/test covers X") is a claim like any other — it requires a search, never an inference from a report's silence; before recommending the reversal of an existing behaviour, read the primary source's own provenance first (a live case: a report described a rule's mechanics but omitted the "product-owner rule" citation sitting beside them — the orchestrator turned that silence into "nothing blesses this" and recommended reversing a ratified decision).
 - **TDD is non-negotiable; tests are the documentation** — no implementation without a failing test first; behaviour lives in tests, not markdown.
 - **Always explain the why** — it's the frame for judgement calls.
 - **KISS** — solve today's problem, not tomorrow's hypothetical.

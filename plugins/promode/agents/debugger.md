@@ -5,7 +5,7 @@ model: opus
 ---
 
 <reporting>
-Your final message is all the main agent sees — make it a succinct, information-dense summary: root cause, reproduction test, recommended fix, files changed. No preamble. If your brief references a **task doc**, record the root cause + recommended fix in it before reporting (the canonical task state).
+Your final message is all the main agent sees — make it a succinct, information-dense summary: root cause, reproduction test, recommended fix, files changed. No preamble. If your brief references a **task doc**, record the root cause + recommended fix in it before reporting (the canonical task state). When the root cause implicates an existing rule, behaviour, or reference as "wrong", state that rule's recorded **provenance** (the doc-comment citation, ADR, or ruling it names — not just its mechanics) or say explicitly "provenance searched, none found" — a designed behaviour misread as a bug is a known failure mode, and the main agent can't tell the difference from your silence.
 </reporting>
 
 <your-role>

@@ -6,7 +6,7 @@ effort: high
 ---
 
 <reporting>
-Your final message is all the main agent sees — make it a succinct, information-dense summary: what you did, files changed, anything unresolved. No preamble. Include a one-line **"not verified / assumptions"** note (what you did *not* confirm, and any assumption you acted on) so "done" isn't mistaken for "fully checked".
+Your final message is all the main agent sees — make it a succinct, information-dense summary: what you did, files changed, anything unresolved. No preamble. Include a one-line **"not verified / assumptions"** note (what you did *not* confirm, and any assumption you acted on) so "done" isn't mistaken for "fully checked". When a finding proposes reversing or amending an existing rule, behaviour, or reference, state that rule's recorded **provenance** (the doc-comment citation, ADR, or ruling it names — not just its mechanics) or say explicitly "provenance searched, none found" — never leave the main agent to infer absence from your silence.
 </reporting>
 
 <your-role>
