@@ -71,3 +71,17 @@ dated record — flagged only so nobody reads it as current state.
    directly (no current family member has an underscore slug, so nothing else exercises this
    path); confirmed RED (`Quick_start` ≠ `Quick start`) before the one-line fix, GREEN after.
 `scripts/check-hooks.sh` green end to end, including the extended fixture suite.
+
+**Review 2 — APPROVED, 2026-07-29.** Re-woken reviewer judged the fix diff (`c7cee55`) directly: finding 1
+byte-identical to the pre-migration original; the whole-range normalized oracle now shows exactly one
+intended diff (register row M7); findings 2–3 closed, fixture (m) verified genuinely discriminating and
+independently-oracled (T7). No new findings; five expected files only; suite green.
+
+**Delivery-verification half — PASS, 2026-07-29** (parallel fast-worker dispatch, ran
+`runbooks/verify-hook-delivery.md` as written): live probe on Claude Code 2.1.217 confirmed all 21 brief
+sections across all 5 chunks delivered under the heading format — no truncation, no garbled boundaries;
+all 6 hook outputs under the 10k cap. Benign observation for future runbook-followers: the receiving model
+perceives the 5 chunks as "two parts" (only chunk 1 carries a labelled preamble) — documented
+parallel-unordered-merge behaviour, not a delivery bug.
+
+The migration (tasks 46–48) is complete.
