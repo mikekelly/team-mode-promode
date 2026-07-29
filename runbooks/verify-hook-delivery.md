@@ -45,7 +45,7 @@ session**. Mechanics pinned live on Claude Code 2.1.201 (2026-07-07, skills-migr
 ```bash
 cd "$(mktemp -d)" && git init -q .   # scratch project, not this repo
 claude --plugin-dir /path/to/promode/plugins/promode \
-  -p 'How many promode brief parts arrived in your context? List their opening tags.' \
+  -p 'How many promode brief parts arrived in your context? List their opening section headings.' \
   --output-format json | jq '.[-1].result'
 ```
 

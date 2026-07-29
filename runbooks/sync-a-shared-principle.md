@@ -11,7 +11,7 @@ This is deliberate, stated in `CLAUDE.md` ("Principles live in two places by des
 several agent homes) and in the brief's design notes:
 
 - The **main agent** gets principles from the hook-delivered brief
-  (`plugins/promode/PROMODE_MAIN_AGENT.md`, `<principles>` and the surrounding decision sections).
+  (`plugins/promode/PROMODE_MAIN_AGENT.md`, §principles and the surrounding decision sections).
   It must be self-contained because a pointer may not be read.
 - **Subagents** get nothing from the brief or `CLAUDE.md` methodology — each carries its own
   methodology inline in its definition (`plugins/promode/agents/*.md`).
@@ -27,8 +27,8 @@ ruling, 2026-07-02, after a prompt-corpus review proposed exactly that dedup.)
 
 ## Which files hold which principles
 
-- **Brief** — `plugins/promode/PROMODE_MAIN_AGENT.md`: `<principles>`, plus the decision sections
-  (`<test-strategy>`, `<after-action-review>` runbook/knowledge rules, `<feature-knowledge-base>`).
+- **Brief** — `plugins/promode/PROMODE_MAIN_AGENT.md`: §principles, plus the decision sections
+  (§test-strategy, §after-action-review runbook/knowledge rules, §feature-knowledge-base).
 - **Subagents** — the relevant `plugins/promode/agents/*.md`. Shared-principle text (TDD / evidence /
   operator-seam / crystallise / behavioural-authority) lives across the engineer rungs, the CTO, and
   the review/debug/verify/env agents. (Re-grep before editing — `grep -ln 'TDD\|operator seam\|Crystallise\|Evidence over assumptions'
@@ -51,16 +51,16 @@ the committed defs):
   share their **whole body** byte-identical: one generic-executor prompt across four cost tiers
   (inherit / Opus / Sonnet / Haiku). Workers carry no TDD / constraint-ladder / behavioural-authority —
   a worker that hits production code bounces it up to an engineer.
-- **`<reporting>` ×7** — byte-identical across the engineer rungs (`senior-engineer`,
+- **§reporting ×7** — byte-identical across the engineer rungs (`senior-engineer`,
   `mid-level-engineer`), the four workers, and `gui-driver`. The specialist / judging / product defs
   (reviewer, verifier, debugger, CTO, CPO, SPD, auditor, agent-analyzer, environment-manager,
   constraint-reinforcer) carry a role-**calibrated** reporting payload (P13: pattern verbatim, payload
   calibrated) and are deliberately NOT members — asserting them equal would turn valid calibration into
   a false failure.
-- **`<behavioural-authority>` ×5** — byte-identical (closing why-line included) across
+- **§behavioural-authority ×5** — byte-identical (closing why-line included) across
   `senior-engineer.md`, `mid-level-engineer.md`, `chief-technology-officer.md`, `code-reviewer.md`,
   `debugger.md`.
-- **`<test-driven-development>` ×3** — `senior-engineer.md`, `mid-level-engineer.md`,
+- **§test-driven-development ×3** — `senior-engineer.md`, `mid-level-engineer.md`,
   `chief-technology-officer.md`. SE and mid are already covered transitively by the engineer-body
   family; CTO is not a body-family member, so this check is what binds CTO's TDD copy to the engineers'.
 
@@ -68,9 +68,9 @@ the committed defs):
 
 Sections are delimited by **markdown headings**: a section named `<slug>` under the old XML-tag
 convention becomes `## Slug words` (hyphens to spaces, first word capitalised), chosen so the GitHub
-auto-anchor still equals the old slug and every `§slug` citation keeps working. The corpus conversion
-is a separate change — until it lands the script reads either syntax (see the fallback bullet below).
-Convention + rationale:
+auto-anchor still equals the old slug and every `§slug` citation keeps working. The corpus was
+converted on 2026-07-29 (task 47) and the script's legacy tag path was deleted with it — headings are
+now the only recognised delimiter. Convention + rationale:
 [`docs/decisions/2026-07-headings-section-convention.md`](../docs/decisions/2026-07-headings-section-convention.md).
 
 This is how the script extracts a named block — run it by hand when you want to diff two homes
@@ -104,18 +104,24 @@ Three properties of the recipe are deliberate and worth knowing before you trust
 - **Body-only.** The delimiter line is never checksummed, and trailing blank lines are trimmed. This
   is what let the corpus migrate off the old XML-tag delimiters one home at a time: the same body
   hashes the same under either delimiter syntax.
-- **A legacy tag fallback exists** while any home still carries the old `<slug>`…`</slug>` delimiters —
-  heading first, tag second. It is deleted once the corpus is heading-only.
+- **Headings only — the legacy tag fallback is gone.** During the migration window the script read
+  `<slug>`…`</slug>` as a fallback; that path was deleted once the corpus was heading-only, so a home
+  that regresses to tag delimiters now fails as an unfindable block instead of being quietly accepted.
 - **An empty extraction is drift, not agreement.** Rename or drop a section's heading and the check
   fails loudly, rather than comparing several empty strings and calling them identical.
 
+The check has its own fixture suite, `scripts/test-check-shared-principle-checksums.sh` — it asserts the
+check passes on a pristine tree and *fails* on each deliberately-broken sibling. It runs inside
+`scripts/check-hooks.sh` (and therefore CI): the extractor is the fragile part, and a silently-broken
+extractor reports every family "byte-identical" while comparing nothing.
+
 **Superseded record (M3 — never silently deleted).** Before the roster restructure the families were
 different, and the migration note in the decision node requires keeping the old shape visible: the full
-`<test-driven-development>` section had **two** verbatim homes (`senior-engineer.md` +
+§test-driven-development section had **two** verbatim homes (`senior-engineer.md` +
 `chief-technology-officer.md`); the old **`fast-worker.md`** was a *TDD-bound engineer* whose TDD copy
 was deliberately **calibrated** to a weaker pin (fewer design-altitude bullets, no logic-spikes
-exception) rather than byte-identical, and whose `<agent-knowledge>` omitted the decision-node sentence
-by lane asymmetry; `<behavioural-authority>` listed that old fast-worker among its five homes. That
+exception) rather than byte-identical, and whose §agent-knowledge omitted the decision-node sentence
+by lane asymmetry; §behavioural-authority listed that old fast-worker among its five homes. That
 engineer role is now **`mid-level-engineer.md`** (a full engineer-body sibling of SE, so its TDD/BA are
 now byte-identical, not merely calibrated); the name **`fast-worker.md`** now denotes a *generic worker*
 with no TDD block at all, and the old fast-worker's behavioural-authority slot is now `mid-level-engineer`.
@@ -137,7 +143,7 @@ version in the same commit (see [cut-a-release.md](cut-a-release.md)).
 3. Re-grep the agent definitions for the old wording; edit **every** definition that carries it so
    the working agents match the brief. Don't add it to agents the principle doesn't apply to.
 4. If your edit touched a member of a **byte-identical family** (above — engineer body, worker body,
-   `<reporting>`, `<behavioural-authority>`, `<test-driven-development>`), re-run
+   §reporting, §behavioural-authority, §test-driven-development), re-run
    `./scripts/check-shared-principle-checksums.sh` and fix any drift before committing — it fails CI
    otherwise. This is the deterministic replacement for eyeballing the copies.
 5. If the auditor (`plugins/promode/agents/auditor.md`) has a dimension that checks this principle,

@@ -15,7 +15,7 @@ cold-readable and states one idea in one home.
 - [Cut a release / bump the version](runbooks/cut-a-release.md) — where the version lives, and the
   bump → commit → push flow. Defers to [`scripts/bump-version.sh`](scripts/bump-version.sh).
 - [Add a new subagent](runbooks/add-a-subagent.md) — the complete checklist of files to touch (the
-  new `agents/<name>.md`, the brief's `<delegation-map>`, the `CLAUDE.md` agents bullet list, the `README.md` table).
+  new `agents/<name>.md`, the brief's §delegation-map, the `CLAUDE.md` agents bullet list, the `README.md` table).
 - [Sync a shared principle across its homes](runbooks/sync-a-shared-principle.md) — keeping the
   brief and the agent definitions consistent when a principle changes (they duplicate by design).
 - [Verify hook delivery](runbooks/verify-hook-delivery.md) — the 10k cap, brief isolation, and

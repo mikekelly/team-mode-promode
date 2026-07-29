@@ -19,7 +19,8 @@ Both are addressed below rather than ignored: reason 1 is judged obsolete at the
 | `<reporting>` | `## Reporting` | `#reporting` |
 | `<background-delegation>` | `## Background delegation` | `#background-delegation` |
 
-- **Top-level sections use `##`; nested sections use `###`**, same title rule.
+- **Top-level sections use `##`; nested sections use `###`**, same title rule. (The corpus turned out to have **no** nested sections — all 253 converted sections were top-level.)
+- Slugs are `[a-z-]` with one exception found at conversion time, `<quick_start>` in `discovery-to-determinism.md`; underscores translate to spaces like hyphens, so it became `## Quick start` (anchor `#quick-start`, the one slug whose anchor is not byte-identical to its old tag — nothing cited it).
 - **A section's body runs to the next heading of the same-or-higher level, outside code fences.** The fence caveat is load-bearing, not theoretical: the brief embeds `##` lines inside a fenced markdown block (the task-doc template, `PROMODE_MAIN_AGENT.md` §task-docs), so a fence-blind scan ends `## Task docs` at a fake heading and silently stops reading the rest of the section.
 - **`<!-- CHUNK -->` markers are not sections** and are untouched — they are the hook's chunk boundaries, a separate mechanism.
 - Citations in prose move from `<slug>` notation to `§slug` notation. No citation *target* changes.
@@ -45,7 +46,7 @@ That is what makes task 47's citation sweep a *notation* change (`<test-strategy
 
 `scripts/check-shared-principle-checksums.sh` is the only script that parses section delimiters (grepped 2026-07-29). Its contract, pinned by `scripts/test-check-shared-principle-checksums.sh`:
 
-- **Heading first, tag as fallback.** Both formats are read during the migration window. The tag path is deleted in task 47 once the corpus is heading-only.
+- **Heading first, tag as fallback.** Both formats were read during the migration window. **The tag path was deleted in task 47** (2026-07-29) once the corpus went heading-only, pinned by a fixture that converts one home back to tag delimiters and asserts the check fails; headings are now the only recognised delimiter.
 - **Body-only, trailing blanks trimmed.** The delimiter line itself is never checksummed, and a heading section's trailing blank line (the separator before the next heading, which a tag block never had) is dropped. Consequence, and the reason for it: a tag block and its heading equivalent **hash identically**, so a byte-identical family can be migrated one home at a time without the check going red — which is what "every intermediate commit stays green" required.
 - **An empty extraction is drift, not agreement.** Seven empty strings compare equal; without this rule a renamed or dropped delimiter would silently unguard a whole family instead of failing it. (Making this rule bite also required fixing a latent bug: `sum` runs inside a command substitution — a subshell — so its `fail=1` never reached the parent, and a missing file printed FAIL while the script exited 0.)
 - **Fence-aware.** See the fenced-`##` caveat above; the test suite's discriminating fixture injects drift *after* a fenced `##` inside a section, which a fence-blind extractor reports as a false PASS.

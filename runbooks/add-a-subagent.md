@@ -10,7 +10,7 @@ A subagent is real only when (a) its definition exists, (b) the **main agent's b
 to it, and (c) the human-facing `README.md` table describes it. The brief is the load-bearing one —
 it reaches the main agent via the SessionStart hook, and the main agent delegates from it. The
 `README.md` table is a descriptive mirror. (There is no agent table in `CLAUDE.md` — the brief's
-`<delegation-map>` is the canonical routing, as `CLAUDE.md` itself states.)
+§delegation-map is the canonical routing, as `CLAUDE.md` itself states.)
 
 ## Checklist (touch all of these)
 
@@ -24,17 +24,17 @@ it reaches the main agent via the SessionStart hook, and the main agent delegate
      dispatched with per-call effort — see [`docs/decisions/2026-07-effort-dispatch-constraint.md`](../docs/decisions/2026-07-effort-dispatch-constraint.md)
      and [`docs/decisions/2026-07-agent-roster-restructure.md`](../docs/decisions/2026-07-agent-roster-restructure.md).
    - **Does the new def join a checksummed byte-identical family?** If it is another engineer or worker
-     rung (shares the engineer/worker body), or carries the shared `<reporting>` /
-     `<behavioural-authority>` / `<test-driven-development>` block, add it to the relevant family list
+     rung (shares the engineer/worker body), or carries the shared §reporting /
+     §behavioural-authority / §test-driven-development block, add it to the relevant family list
      in `scripts/check-shared-principle-checksums.sh` and make its block byte-identical — the sync
      mechanics are in [`sync-a-shared-principle.md`](sync-a-shared-principle.md). A new rung that
      silently diverges is drift the check exists to catch.
    - Body carries the agent's own methodology (it gets nothing from `CLAUDE.md`'s methodology — see
-     the existing agents for the section shape: `<reporting>`, `<your-role>`, principles, etc.).
+     the existing agents for the section shape: §reporting, §your-role, principles, etc.).
    - Match an existing sibling in `plugins/promode/agents/` for structure.
 
-2. **Brief — `<delegation-map>`** — `plugins/promode/PROMODE_MAIN_AGENT.md`.
-   - Add a routing line under `<delegation-map>`. This is the load-bearing one — it is how the main
+2. **Brief — §delegation-map** — `plugins/promode/PROMODE_MAIN_AGENT.md`.
+   - Add a routing line under §delegation-map. This is the load-bearing one — it is how the main
      agent learns to delegate to the agent. Without it the agent is defined but never dispatched.
      (The brief carries no agent *table*; routing is the map. The descriptive mirrors live in
      `CLAUDE.md` — the agents bullet list — and `README.md`'s table, below.)
@@ -49,7 +49,7 @@ it reaches the main agent via the SessionStart hook, and the main agent delegate
 
 - `./scripts/check-hooks.sh` is green (if you edited the brief/hooks).
 - `./scripts/check-shared-principle-checksums.sh` is green (if the new def joined a byte-identical family).
-- The brief's `<delegation-map>` actually routes work to the new agent (not just a table mention).
+- The brief's §delegation-map actually routes work to the new agent (not just a table mention).
 
 ## See also
 

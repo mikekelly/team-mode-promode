@@ -14,32 +14,33 @@
 #     Opus rung and the Sonnet rung differ only in frontmatter.
 #   - worker-body: elite/high-level/fast/cheap-worker.md share their whole body verbatim — one
 #     generic-executor prompt across the four cost tiers (inherit/Opus/Sonnet/Haiku).
-#   - <reporting>: the generic reporting block is byte-identical across the engineer + worker
+#   - §reporting: the generic reporting block is byte-identical across the engineer + worker
 #     rungs and gui-driver. The specialised defs (reviewer, verifier, debugger, CTO, CPO, SPD,
 #     auditor, agent-analyzer, environment-manager, constraint-reinforcer) carry a
 #     role-CALIBRATED reporting payload (P13: pattern verbatim, payload calibrated) and are
 #     deliberately NOT members — asserting them equal would turn valid calibration into a
 #     false failure. Membership is pinned explicitly below.
-#   - <behavioural-authority>: five verbatim homes — senior-engineer, mid-level-engineer,
+#   - §behavioural-authority: five verbatim homes — senior-engineer, mid-level-engineer,
 #     chief-technology-officer, code-reviewer, debugger — closing why-line included.
-#   - <test-driven-development>: senior-engineer, mid-level-engineer, chief-technology-officer.
+#   - §test-driven-development: senior-engineer, mid-level-engineer, chief-technology-officer.
 #     SE and mid are already covered transitively by the engineer-body family; CTO is not a
 #     body-family member, so this check is what binds CTO's TDD copy to the engineers'.
 #
-# SECTION FORMATS — headings first, XML tags as fallback.
+# SECTION FORMAT — markdown headings, and only headings.
 # The corpus used to delimit sections with XML tags (`<reporting>`…`</reporting>`). The
 # maintainer ratified markdown headings instead on 2026-07-29
 # (docs/decisions/2026-07-headings-section-convention.md): a section named `<slug>` becomes
 # `## Slug words` — hyphens to spaces, first word capitalised — chosen so GitHub's auto-anchor
 # is byte-identical to the old tag name and every `§slug` citation survives. Nested sections
-# use `###`. This script reads BOTH formats while the corpus migrates: it tries the heading
-# first and falls back to the tag, so a family can move one home at a time without going red.
-# Delete the tag path once the corpus carries no tags.
+# use `###`. The corpus was converted in task 47 and the legacy tag path deleted with it, so a
+# home that regresses to tag delimiters now fails as an unfindable block rather than being
+# silently accepted (fixture (l) in the test harness pins that).
 #
-# Two properties make that dual-format window safe:
-#   - Extraction is BODY-ONLY (the delimiter line itself is never checksummed) and trailing
-#     blank lines are trimmed, so a tag block and its heading equivalent hash the SAME. That is
-#     what lets a half-migrated family stay green.
+# Two properties of the extraction:
+#   - It is BODY-ONLY: the delimiter line itself is never checksummed, and trailing blank lines
+#     are trimmed (a heading section runs to the next heading and so collects the separating
+#     blank line, which a tag block never had). This is what let the corpus migrate one home at
+#     a time without the check going red during the task-46/47 window.
 #   - An extraction that comes back EMPTY is drift, not agreement. Seven empty strings compare
 #     equal, so without this a renamed or dropped delimiter would silently unguard the family.
 #
@@ -89,21 +90,14 @@ extract_heading() {
   ' "$1" | trim_trailing_blanks
 }
 
-# extract_tag <file> <tag> — body between <tag> and </tag>, delimiters excluded (legacy format).
-extract_tag() {
-  awk -v t="$2" '$0=="</"t">"{p=0} p{print} $0=="<"t">"{p=1}' "$1" | trim_trailing_blanks
-}
-
 # extract <file> <what> — <what> is a section slug or the literal __BODY__.
 extract() {
-  local file="$1" what="$2" out
+  local file="$1" what="$2"
   if [ "$what" = "__BODY__" ]; then
     awk 'f{print} /^---$/{c++; if(c==2)f=1}' "$file"
     return
   fi
-  out="$(extract_heading "$file" "$(heading_title "$what")")"
-  [ -n "$out" ] || out="$(extract_tag "$file" "$what")"
-  printf '%s' "$out"
+  printf '%s' "$(extract_heading "$file" "$(heading_title "$what")")"
 }
 
 # sum <file> <what> — checksum the extracted block/body
@@ -115,8 +109,8 @@ sum() {
   fi
   block="$(extract "$file" "$what")"
   if [ -z "$block" ]; then
-    printf 'FAIL  block not found: %s in %s — expected `## %s` or <%s>\n' \
-      "$what" "$file" "$(heading_title "$what")" "$what" >&2
+    printf 'FAIL  block not found: %s in %s — expected a `## %s` heading\n' \
+      "$what" "$file" "$(heading_title "$what")" >&2
     return 1
   fi
   printf '%s' "$block" | shasum -a 256 | cut -d' ' -f1
@@ -151,19 +145,19 @@ assert_all_equal "engineer body" __BODY__ senior-engineer.md mid-level-engineer.
 assert_all_equal "worker body" __BODY__ \
   elite-worker.md high-level-worker.md fast-worker.md cheap-worker.md
 
-# --- <reporting>: generic block shared by engineer + worker rungs and gui-driver ---
-assert_all_equal "<reporting>" reporting \
+# --- §reporting: generic block shared by engineer + worker rungs and gui-driver ---
+assert_all_equal "§reporting" reporting \
   senior-engineer.md mid-level-engineer.md \
   elite-worker.md high-level-worker.md fast-worker.md cheap-worker.md \
   gui-driver.md
 
-# --- <behavioural-authority>: five verbatim homes ---
-assert_all_equal "<behavioural-authority>" behavioural-authority \
+# --- §behavioural-authority: five verbatim homes ---
+assert_all_equal "§behavioural-authority" behavioural-authority \
   senior-engineer.md mid-level-engineer.md chief-technology-officer.md \
   code-reviewer.md debugger.md
 
-# --- <test-driven-development>: SE, mid, CTO ---
-assert_all_equal "<test-driven-development>" test-driven-development \
+# --- §test-driven-development: SE, mid, CTO ---
+assert_all_equal "§test-driven-development" test-driven-development \
   senior-engineer.md mid-level-engineer.md chief-technology-officer.md
 
 echo

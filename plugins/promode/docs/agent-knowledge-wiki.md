@@ -71,7 +71,7 @@ Promode itself ships **no skills** (register opinion M5 `no-voluntary-invocation
 - **Inline the exact conventions at the point of use.** Precise thresholds, formats, and rules (the commit format, the seam shape, a naming rule) belong stated *where the agent acts on them*, not deferred behind a link — progressive disclosure under-performs for exact conventions.
 - **Leading words.** One word already in the model's pretraining (*fog of war*, *tracer bullets*, *tight*) recruits priors a paragraph of instruction can't buy. When a behaviour under-fires, strengthen the word, not the sentence count.
 - **Examples document the problem, not the solution.** A solution example ("so we keyed it on FRONT_ARC") rots as the code moves on; a problem example teaches the shape of the situation the rule exists for, and stays true.
-- **Fix a misfiring skill (or routed doc) at the faulty step.** When it produces the wrong behaviour, localise the *first* faulty step, make the *minimal* edit, and commit it as a reviewable diff with its rationale — don't rewrite the whole thing. (The cross-session retrospective surfaces these — see the main-agent brief's `<after-action-review>`.)
+- **Fix a misfiring skill (or routed doc) at the faulty step.** When it produces the wrong behaviour, localise the *first* faulty step, make the *minimal* edit, and commit it as a reviewable diff with its rationale — don't rewrite the whole thing. (The cross-session retrospective surfaces these — see the main-agent brief's §after-action-review.)
 
 ## Authoring agent definitions
 
