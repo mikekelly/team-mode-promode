@@ -54,11 +54,12 @@ AGENTS_DIR="${AGENTS_DIR:-$REPO/plugins/promode/agents}"
 
 fail=0
 
-# heading_title <slug> — the ratified anchor-preserving title: hyphens to spaces, first word
-# capitalised. `test-driven-development` -> `Test driven development` -> anchor
-# `#test-driven-development`, byte-identical to the old tag name.
+# heading_title <slug> — the ratified anchor-preserving title: hyphens AND underscores to
+# spaces, first word capitalised. `test-driven-development` -> `Test driven development` ->
+# anchor `#test-driven-development`, byte-identical to the old tag name. `quick_start` ->
+# `Quick start` the same way (the one underscore slug found at conversion time).
 heading_title() {
-  local s="${1//-/ }"
+  local s="${1//-/ }"; s="${s//_/ }"
   printf '%s%s' "$(printf '%s' "${s:0:1}" | tr '[:lower:]' '[:upper:]')" "${s:1}"
 }
 

@@ -163,6 +163,24 @@ d=$(fresh_copy)
 to_tags "$d/gui-driver.md"
 expect_fail "legacy XML tag delimiters no longer recognised (gui-driver)" "$d"
 
+# --- (m) heading_title translates underscores as well as hyphens ---
+# The ratified rule (docs/decisions/2026-07-headings-section-convention.md) is explicit that
+# underscores translate like hyphens: `quick_start` -> `## Quick start` (the one slug found with
+# an underscore, in discovery-to-determinism.md). No current family member has an underscore
+# slug, so nothing in the hardcoded family list below exercises this — call heading_title
+# directly (extracted from the script, isolated in a subshell) rather than round-tripping
+# through a fixture directory.
+heading_title_of() {
+  bash -c "$(sed -n '/^heading_title() {/,/^}/p' "$CHECK"); heading_title \"\$1\"" _ "$1"
+}
+got="$(heading_title_of quick_start)"
+if [ "$got" = "Quick start" ]; then
+  printf 'ok    heading_title translates underscores (quick_start -> %s)\n' "$got"
+else
+  printf 'FAIL  heading_title(quick_start) = %s, expected "Quick start" (underscore not translated)\n' "$got"
+  fail=1
+fi
+
 echo
 if [ "$fail" -ne 0 ]; then
   echo "✗ check-shared-principle-checksums.sh did not behave as specified"
