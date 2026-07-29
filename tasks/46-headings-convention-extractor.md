@@ -14,3 +14,44 @@
 - **Pending goals / next step** — task 47 consumes this convention
 
 ## Outcome  (filled by the agent on completion)
+
+**Done 2026-07-29.** Convention minted and the extractor rewritten test-first. Corpus untouched (task 47).
+
+- **Decision node** — `docs/decisions/2026-07-headings-section-convention.md`. Records the convention,
+  the anchor-preservation rationale, the extraction contract, and a rejected-alternatives log. Carries
+  the **provenance of the rule it reverses**: the XML-tag convention was reviewed and explicitly KEPT on
+  2026-07-16 (task 45, commit `1e71929`, recorded in `DONE.md` + `tasks/45-brief-cruft-surgery.md`) on two
+  grounds — Anthropic's July-2026 prompt-structuring guidance, and `B§` anchors + checksum tooling. The
+  node answers both: ground 1 is an instruction-following crutch re-audited away at frontier tier (O34),
+  ground 2 is *preserved by construction*, not traded.
+- **Anchor preservation verified mechanically, not asserted** — all **151** whole-line tag slugs across
+  brief + defs + routed docs + commands round-trip slug → title → GFM anchor → same slug, zero
+  mismatches. This is what makes task 47's sweep a notation change rather than a re-slugging.
+- **Extractor** — `scripts/check-shared-principle-checksums.sh`: heading extraction first (fence-aware),
+  legacy tag extraction as fallback. Three contract decisions, each pinned by a test:
+  - **Body-only + trailing-blank trim** → a tag block and its heading equivalent hash *identically*, so a
+    byte-identical family can be migrated one home at a time without going red. Verified by hand against
+    a converted fixture (same digest both ways).
+  - **Fence-aware** → the brief embeds `##` lines inside a fenced block (§task-docs template, line ~184);
+    a fence-blind scan truncates that section today. The discriminating fixture injects drift *after* a
+    fenced `##` — fence-blind reports a false PASS.
+  - **Empty extraction is drift, not agreement** → a renamed/dropped delimiter fails loudly instead of
+    comparing several empty strings as equal.
+- **Latent bug fixed en route** — `sum` runs inside a command substitution (a subshell), so its `fail=1`
+  never reached the parent: a missing file printed FAIL and the script still exited **0**. The caller now
+  translates `sum`'s exit status into the run verdict. The empty-is-drift rule depends on this.
+- **Tests** — `scripts/test-check-shared-principle-checksums.sh` grew five fixtures (g0, g, h, j, k) on top
+  of the six tag-format ones: unfindable block, full heading conversion, half-migrated family, fenced `##`
+  benign, fenced `##` with drift past it. All eleven green; full `scripts/check-hooks.sh` green against the
+  still-tagged corpus.
+- **Runbook** — `runbooks/sync-a-shared-principle.md` gained a "How the check finds a block" subsection
+  with the runnable recipe (empirically checked against the script, not transcribed), the three contract
+  properties, and the link that puts the decision node on the knowledge graph (RUNBOOKS.md → runbook → node).
+
+**Constraint for task 47** (decisions-as-constraints): the corpus conversion must be a *deterministic
+script*, not hand edits — and while a half-migrated family is safe by design, a family whose members are
+converted by different means is exactly the drift the checksum script exists to catch.
+
+**Flagged, not done** (out of scope here): the opinion register has no Meta-block item for the
+section-delimiter convention. If one is wanted, task 47 already edits the register and is the natural
+place to add it — the main agent's call, not this task's.

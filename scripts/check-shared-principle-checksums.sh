@@ -26,8 +26,24 @@
 #     SE and mid are already covered transitively by the engineer-body family; CTO is not a
 #     body-family member, so this check is what binds CTO's TDD copy to the engineers'.
 #
-# Extraction reuses the awk/shasum recipe from sync-a-shared-principle.md; body extraction
-# takes everything after the frontmatter's second `---`.
+# SECTION FORMATS — headings first, XML tags as fallback.
+# The corpus used to delimit sections with XML tags (`<reporting>`…`</reporting>`). The
+# maintainer ratified markdown headings instead on 2026-07-29
+# (docs/decisions/2026-07-headings-section-convention.md): a section named `<slug>` becomes
+# `## Slug words` — hyphens to spaces, first word capitalised — chosen so GitHub's auto-anchor
+# is byte-identical to the old tag name and every `§slug` citation survives. Nested sections
+# use `###`. This script reads BOTH formats while the corpus migrates: it tries the heading
+# first and falls back to the tag, so a family can move one home at a time without going red.
+# Delete the tag path once the corpus carries no tags.
+#
+# Two properties make that dual-format window safe:
+#   - Extraction is BODY-ONLY (the delimiter line itself is never checksummed) and trailing
+#     blank lines are trimmed, so a tag block and its heading equivalent hash the SAME. That is
+#     what lets a half-migrated family stay green.
+#   - An extraction that comes back EMPTY is drift, not agreement. Seven empty strings compare
+#     equal, so without this a renamed or dropped delimiter would silently unguard the family.
+#
+# Body extraction (__BODY__) is unchanged: everything after the frontmatter's second `---`.
 #
 # AGENTS_DIR override exists for the test harness (test-check-shared-principle-checksums.sh);
 # defaults to the plugin's agents dir. Exit 1 on any drift.
@@ -37,26 +53,73 @@ AGENTS_DIR="${AGENTS_DIR:-$REPO/plugins/promode/agents}"
 
 fail=0
 
-# extract <file> <what> — <what> is a tag name (extract <tag>...</tag> inclusive) or the
-# literal __BODY__ (everything after the frontmatter's closing --- line).
+# heading_title <slug> — the ratified anchor-preserving title: hyphens to spaces, first word
+# capitalised. `test-driven-development` -> `Test driven development` -> anchor
+# `#test-driven-development`, byte-identical to the old tag name.
+heading_title() {
+  local s="${1//-/ }"
+  printf '%s%s' "$(printf '%s' "${s:0:1}" | tr '[:lower:]' '[:upper:]')" "${s:1}"
+}
+
+# trim_trailing_blanks — a heading section runs up to the next heading, so it collects the blank
+# line(s) that separate them; a tag block never did. Trimming is what makes the two formats
+# produce identical bytes for identical bodies.
+trim_trailing_blanks() {
+  awk '/^[[:space:]]*$/ { buf = buf $0 "\n"; next } { printf "%s", buf; buf = ""; print }'
+}
+
+# extract_heading <file> <title> — body of the `## <title>` (or `###` …) section, running to the
+# next heading of the same-or-higher level. Fence-aware: the corpus embeds `##` lines inside
+# fenced code blocks (the brief's task-doc template), and a fence-blind scan would end the
+# section there and silently stop comparing everything past it.
+extract_heading() {
+  awk -v h="$2" '
+    /^[[:space:]]*(```|~~~)/ { fence = !fence }
+    {
+      if (!fence && match($0, /^#+ /)) {
+        lvl = index($0, " ") - 1
+        if (!p) {
+          if (substr($0, lvl + 2) == h) { p = 1; plvl = lvl; next }
+        } else if (lvl <= plvl) {
+          p = 0
+        }
+      }
+      if (p) print
+    }
+  ' "$1" | trim_trailing_blanks
+}
+
+# extract_tag <file> <tag> — body between <tag> and </tag>, delimiters excluded (legacy format).
+extract_tag() {
+  awk -v t="$2" '$0=="</"t">"{p=0} p{print} $0=="<"t">"{p=1}' "$1" | trim_trailing_blanks
+}
+
+# extract <file> <what> — <what> is a section slug or the literal __BODY__.
 extract() {
-  local file="$1" what="$2"
+  local file="$1" what="$2" out
   if [ "$what" = "__BODY__" ]; then
     awk 'f{print} /^---$/{c++; if(c==2)f=1}' "$file"
-  else
-    awk -v t="$what" '$0=="<"t">"{p=1} p{print} $0=="</"t">"{p=0}' "$file"
+    return
   fi
+  out="$(extract_heading "$file" "$(heading_title "$what")")"
+  [ -n "$out" ] || out="$(extract_tag "$file" "$what")"
+  printf '%s' "$out"
 }
 
 # sum <file> <what> — checksum the extracted block/body
 sum() {
-  local file="$1" what="$2"
+  local file="$1" what="$2" block
   if [ ! -f "$file" ]; then
     printf 'FAIL  missing file: %s\n' "$file" >&2
-    fail=1
     return 1
   fi
-  extract "$file" "$what" | shasum -a 256 | cut -d' ' -f1
+  block="$(extract "$file" "$what")"
+  if [ -z "$block" ]; then
+    printf 'FAIL  block not found: %s in %s — expected `## %s` or <%s>\n' \
+      "$what" "$file" "$(heading_title "$what")" "$what" >&2
+    return 1
+  fi
+  printf '%s' "$block" | shasum -a 256 | cut -d' ' -f1
 }
 
 # assert_all_equal <label> <what> <file...> — every listed file's block/body shares one checksum
@@ -64,7 +127,10 @@ assert_all_equal() {
   local label="$1" what="$2"; shift 2
   local first="" first_file="" f s any_fail=0
   for f in "$@"; do
-    s="$(sum "$AGENTS_DIR/$f" "$what")" || { any_fail=1; continue; }
+    # `sum` runs in a command substitution — a subshell — so it cannot set `fail` itself;
+    # the caller must translate its exit status into the run-level verdict, or a missing file
+    # or unfindable block would print FAIL and still exit 0.
+    s="$(sum "$AGENTS_DIR/$f" "$what")" || { any_fail=1; fail=1; continue; }
     if [ -z "$first" ]; then
       first="$s"; first_file="$f"
     elif [ "$s" != "$first" ]; then

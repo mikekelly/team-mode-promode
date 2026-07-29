@@ -64,6 +64,51 @@ the committed defs):
   `chief-technology-officer.md`. SE and mid are already covered transitively by the engineer-body
   family; CTO is not a body-family member, so this check is what binds CTO's TDD copy to the engineers'.
 
+#### How the check finds a block (the extraction recipe)
+
+Sections are delimited by **markdown headings**: a section named `<slug>` under the old XML-tag
+convention becomes `## Slug words` (hyphens to spaces, first word capitalised), chosen so the GitHub
+auto-anchor still equals the old slug and every `§slug` citation keeps working. The corpus conversion
+is a separate change — until it lands the script reads either syntax (see the fallback bullet below).
+Convention + rationale:
+[`docs/decisions/2026-07-headings-section-convention.md`](../docs/decisions/2026-07-headings-section-convention.md).
+
+This is how the script extracts a named block — run it by hand when you want to diff two homes
+yourself. (The outer fence is four backticks because the recipe itself matches three.)
+
+````bash
+# Body of the `## Reporting` section: heading line excluded, ends at the next same-or-higher
+# heading OUTSIDE code fences — the brief embeds `##` lines inside a fenced template, and a
+# fence-blind scan would end the section at one of those.
+awk -v h='Reporting' '
+  /^[[:space:]]*(```|~~~)/ { fence = !fence }
+  {
+    if (!fence && match($0, /^#+ /)) {
+      lvl = index($0, " ") - 1
+      if (!p) { if (substr($0, lvl + 2) == h) { p = 1; plvl = lvl; next } }
+      else if (lvl <= plvl) { p = 0 }
+    }
+    if (p) print
+  }' plugins/promode/agents/gui-driver.md \
+| awk '/^[[:space:]]*$/ { buf = buf $0 "\n"; next } { printf "%s", buf; buf = ""; print }' \
+| shasum -a 256
+````
+
+The second `awk` drops the blank line(s) a heading section picks up before the next heading — without
+it two identical bodies hash differently depending on whether the section is the file's last. Use this
+recipe to compare **homes against each other**; its absolute digest won't match the script's, which
+strips the block's final newline before hashing.
+
+Three properties of the recipe are deliberate and worth knowing before you trust a green run:
+
+- **Body-only.** The delimiter line is never checksummed, and trailing blank lines are trimmed. This
+  is what let the corpus migrate off the old XML-tag delimiters one home at a time: the same body
+  hashes the same under either delimiter syntax.
+- **A legacy tag fallback exists** while any home still carries the old `<slug>`…`</slug>` delimiters —
+  heading first, tag second. It is deleted once the corpus is heading-only.
+- **An empty extraction is drift, not agreement.** Rename or drop a section's heading and the check
+  fails loudly, rather than comparing several empty strings and calling them identical.
+
 **Superseded record (M3 — never silently deleted).** Before the roster restructure the families were
 different, and the migration note in the decision node requires keeping the old shape visible: the full
 `<test-driven-development>` section had **two** verbatim homes (`senior-engineer.md` +

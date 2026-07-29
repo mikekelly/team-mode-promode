@@ -13,6 +13,13 @@
 #                     code-reviewer, debugger  (five verbatim homes, why-line included)
 #   - test-driven-development: senior-engineer, mid-level-engineer, chief-technology-officer
 #                     (CTO is not a body-family member, so this ties its TDD copy in explicitly)
+#
+# TWO SECTION FORMATS are under test. The corpus delimited sections with XML tags
+# (`<reporting>`…`</reporting>`); the maintainer ratified markdown headings instead
+# (2026-07-29, docs/decisions/2026-07-headings-section-convention.md), with anchor-preserving
+# titles (`<test-driven-development>` -> `## Test driven development`). The extractor supports
+# BOTH during the migration — heading first, tag as fallback — so fixtures here cover:
+#   tag format (a–f)  ·  heading format (g, i)  ·  half-migrated family (h)  ·  fenced `##` (j–k).
 # Run directly; exits non-zero if any expectation is unmet.
 set -uo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -49,6 +56,29 @@ expect_fail() {
   fi
 }
 
+# to_headings <file...> — rewrite whole-line XML section tags into the ratified heading form
+# (`<test-driven-development>` -> `## Test driven development`; close tags dropped). This is
+# exactly the task-47 corpus conversion, applied to a throwaway fixture so the extractor's
+# heading path is exercised against real defs rather than a hand-built toy.
+to_headings() {
+  perl -0pi -e 's{^</[a-z-]+>\n}{}gm; s{^<([a-z-]+)>$}{"## " . ucfirst(($1 =~ s/-/ /gr))}gme' "$@"
+}
+
+# inject_fenced <file> <extra-line|""> — insert a fenced block whose body contains a `##` line
+# into the `## Test driven development` section, optionally followed by an extra line AFTER the
+# fence but still inside the section. The brief really does embed `##` lines inside a fence
+# (the task-doc template), so a fence-BLIND extractor would end the section at the fake heading
+# and silently stop comparing everything past it — the <extra-line> is what makes that visible.
+inject_fenced() {
+  local f="$1"
+  EXTRA="$2" perl -0pi -e '
+    s{^(\#\# Test driven development\n)}
+     {$1 . "```markdown\n## Fake heading inside a fence\n```\n"
+        . ($ENV{EXTRA} ne "" ? $ENV{EXTRA} . "\n" : "")}me' "$f"
+}
+
+TDD_HOMES=(senior-engineer mid-level-engineer chief-technology-officer)
+
 # --- (a) pristine copy passes ---
 d=$(fresh_copy)
 expect_pass "pristine agents dir (all families consistent)" "$d"
@@ -80,6 +110,53 @@ expect_fail "mutated cheap-worker body (worker-body family)" "$d"
 d=$(fresh_copy)
 perl -0pi -e 's{(</reporting>)}{REPORTING-DRIFT-INJECTED-LINE\n$1}' "$d/gui-driver.md"
 expect_fail "mutated gui-driver reporting block (reporting family)" "$d"
+
+# --- (g0) a block no home can be found in is DRIFT, not a vacuous match ---
+# Without this, "all seven extractions came back empty" reads as "all seven agree" — which is
+# how a family would silently stop being guarded the moment its delimiter was renamed. It is
+# also what makes (g) below a real test rather than a comparison of seven empty strings.
+d=$(fresh_copy)
+perl -0pi -e 's{^</?reporting>\n}{}gm' \
+  "$d"/senior-engineer.md "$d"/mid-level-engineer.md "$d"/elite-worker.md \
+  "$d"/high-level-worker.md "$d"/fast-worker.md "$d"/cheap-worker.md "$d"/gui-driver.md
+expect_fail "reporting delimiters stripped from every home (unfindable block)" "$d"
+
+# --- (g) whole corpus converted to heading sections -> every family still consistent ---
+# Proves the heading extraction path selects the same blocks the tag path did.
+d=$(fresh_copy)
+to_headings "$d"/*.md
+expect_pass "all defs on heading sections (heading extraction path)" "$d"
+
+# --- (h) half-migrated family stays green ---
+# gui-driver belongs to the <reporting> family only, so converting just it puts one home on
+# headings while its six siblings stay tagged. This is the intermediate state of the task-47
+# sweep: dual-format support exists precisely so such a commit does not go red.
+d=$(fresh_copy)
+to_headings "$d/gui-driver.md"
+expect_pass "half-migrated reporting family (one heading home, six tagged)" "$d"
+
+# --- (i) drift is still caught once the family is on headings ---
+d=$(fresh_copy)
+to_headings "$d"/*.md
+perl -0pi -e 's{^(\#\# Test driven development\n)}{$1DRIFT-INJECTED-LINE\n}m' \
+  "$d/chief-technology-officer.md"
+expect_fail "mutated CTO TDD section on headings (heading extraction)" "$d"
+
+# --- (j) a fenced `##` inside a section is not a section boundary (identical homes stay green) ---
+d=$(fresh_copy)
+to_headings "$d"/*.md
+for f in "${TDD_HOMES[@]}"; do inject_fenced "$d/$f.md" ""; done
+expect_pass "fenced ## inside a heading section (all homes identical)" "$d"
+
+# --- (k) …and content AFTER that fenced `##` is still compared ---
+# The discriminating fixture: a fence-blind extractor truncates all three homes at the fake
+# heading, so the drift past it would slip through as a false PASS.
+d=$(fresh_copy)
+to_headings "$d"/*.md
+inject_fenced "$d/senior-engineer.md" ""
+inject_fenced "$d/mid-level-engineer.md" ""
+inject_fenced "$d/chief-technology-officer.md" "DRIFT-AFTER-FENCE"
+expect_fail "drift after a fenced ## inside a heading section (fence-awareness)" "$d"
 
 echo
 if [ "$fail" -ne 0 ]; then
