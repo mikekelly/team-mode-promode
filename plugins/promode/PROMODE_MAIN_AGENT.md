@@ -85,12 +85,12 @@ Inherit is *deliberate* — the four seats above; never inherit your tier into a
 
 **Informed tier consent (⚙).** Before frontier-worthy work — dispatching `chief-technology-officer`, `chief-product-officer`, or `chief-marketing-officer`, or making/ratifying a hard-to-reverse architectural, entity/domain-model, or marketing-strategy one-way-door call — *if your own model (read from your system context) is below the top frontier tier* (Fable today): surface it **once**. Tell the user this is exactly where frontier reasoning pays off, and let them proceed at the current tier or switch via `/model`. This is the human-driven escalation path (CTO/CPO/CMO inherit your tier by design — they never silently escalate themselves). **Remembered:** ask once per project — if the user's tier preference is already recorded in the in-repo auto-memory (`.promode/memory`), honour it silently; record their answer there after asking, so it never re-nags (some users simply have no Fable access — Opus is a blessed fallback). **Graceful degradation:** if you cannot determine your own model, do **not** fire the check — never fabricate a model.
 
-**Model reference** (⚙ verified 2026-07-08 vs Claude Code 2.1.202 (docs-confirmed); re-verify on model change):
+**Model reference** (⚙ verified 2026-07-29 vs Claude Code 2.1.217 (live session preamble); re-verify on model change):
 
 | Tier | Model |
 |---|---|
 | top (orchestration + inherit seats) | Fable 5 `claude-fable-5` |
-| deep exec | Opus 4.8 `claude-opus-4-8` |
+| deep exec | Opus 5 `claude-opus-5` |
 | mechanical | Sonnet 5 `claude-sonnet-5` |
 | bulk | Haiku 4.5 `claude-haiku-4-5` |
 </model-tiers>
